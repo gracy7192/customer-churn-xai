@@ -1,0 +1,36 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Environment variables / secrets
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Data
+data/*.csv
+data/*.xlsx
+data/*.xls
+
+# Model artifacts
+models/*.pkl
+models/*.joblib
+
+# Temporary files
+*.tmp
+*.log
