@@ -1,0 +1,161 @@
+{
+  "Example A (high risk)": {
+    "customer_id": "5178-LMXOP",
+    "churn_probability": 0.9348,
+    "churn_prediction": 1,
+    "risk_level": "High churn risk",
+    "top_churn_drivers": [
+      {
+        "feature": "Tenure Months",
+        "contribution": 0.9801,
+        "direction": "increases_risk",
+        "explanation": "The customer's tenure of 1 month is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Contract",
+        "contribution": 0.623,
+        "direction": "increases_risk",
+        "explanation": "The customer's month-to-month contract is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Monthly Charges",
+        "contribution": 0.3228,
+        "direction": "increases_risk",
+        "explanation": "The customer's monthly charge of $95.10 is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Internet Service",
+        "contribution": 0.2278,
+        "direction": "increases_risk",
+        "explanation": "The customer's internet service ('Fiber optic') is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Total Charges",
+        "contribution": 0.2199,
+        "direction": "increases_risk",
+        "explanation": "The customer's total charges to date ($95.10) are contributing to a higher predicted churn risk."
+      }
+    ],
+    "recommendations": [
+      {
+        "driver": "Tenure Months",
+        "action": "Enroll the customer in an onboarding / early-engagement retention program."
+      },
+      {
+        "driver": "Contract",
+        "action": "Offer an incentive (discount or perk) to move from month-to-month to an annual or two-year contract."
+      },
+      {
+        "driver": "Monthly Charges",
+        "action": "Review the customer's plan/pricing (current monthly charge $95.10) or offer a personalized pricing/discount review."
+      },
+      {
+        "driver": "Internet Service",
+        "action": "Review the customer's internet plan ('Fiber optic') for a better-fit offer or service quality check."
+      },
+      {
+        "driver": "Total Charges",
+        "action": "Review the customer's overall billing history for a loyalty or pricing offer."
+      }
+    ]
+  },
+  "Example B (low risk)": {
+    "customer_id": "0794-YVSGE",
+    "churn_probability": 0.0017,
+    "churn_prediction": 0,
+    "risk_level": "Not classified as churn-risk",
+    "top_churn_drivers": [
+      {
+        "feature": "Contract",
+        "contribution": -1.3266,
+        "direction": "decreases_risk",
+        "explanation": "The customer's two year contract is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Tenure Months",
+        "contribution": -1.3103,
+        "direction": "decreases_risk",
+        "explanation": "The customer's tenure of 72 months is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Dependents",
+        "contribution": -1.1602,
+        "direction": "decreases_risk",
+        "explanation": "The customer having dependents is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Monthly Charges",
+        "contribution": -0.2753,
+        "direction": "decreases_risk",
+        "explanation": "The customer's monthly charge of $20.30 is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Tech Support",
+        "contribution": -0.2066,
+        "direction": "decreases_risk",
+        "explanation": "The customer's tech support ('No internet service') is contributing to a lower predicted churn risk."
+      }
+    ],
+    "recommendations": []
+  },
+  "Example C (near threshold)": {
+    "customer_id": "9812-GHVRI",
+    "churn_probability": 0.3002,
+    "churn_prediction": 1,
+    "risk_level": "High churn risk",
+    "top_churn_drivers": [
+      {
+        "feature": "Contract",
+        "contribution": 0.5451,
+        "direction": "increases_risk",
+        "explanation": "The customer's month-to-month contract is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Tenure Months",
+        "contribution": -0.5173,
+        "direction": "decreases_risk",
+        "explanation": "The customer's tenure of 40 months is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Paperless Billing",
+        "contribution": -0.2424,
+        "direction": "decreases_risk",
+        "explanation": "The customer not having paperless billing is contributing to a lower predicted churn risk."
+      },
+      {
+        "feature": "Internet Service",
+        "contribution": 0.2176,
+        "direction": "increases_risk",
+        "explanation": "The customer's internet service ('Fiber optic') is contributing to a higher predicted churn risk."
+      },
+      {
+        "feature": "Total Charges",
+        "contribution": -0.2159,
+        "direction": "decreases_risk",
+        "explanation": "The customer's total charges to date ($3532.25) are contributing to a lower predicted churn risk."
+      }
+    ],
+    "recommendations": [
+      {
+        "driver": "Contract",
+        "action": "Offer an incentive (discount or perk) to move from month-to-month to an annual or two-year contract."
+      },
+      {
+        "driver": "Internet Service",
+        "action": "Review the customer's internet plan ('Fiber optic') for a better-fit offer or service quality check."
+      },
+      {
+        "driver": "Online Security",
+        "action": "Offer an online security add-on/bundle."
+      },
+      {
+        "driver": "Tech Support",
+        "action": "Offer a tech support package."
+      },
+      {
+        "driver": "Multiple Lines",
+        "action": "Review the customer's lines plan (currently 'Yes')."
+      }
+    ]
+  }
+}
