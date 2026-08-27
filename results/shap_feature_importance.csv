@@ -1,0 +1,48 @@
+feature,mean_abs_shap_value
+cat__Contract_Month-to-month,0.65424687
+num__Tenure Months,0.5003099
+cat__Dependents_No,0.4622949
+num__Monthly Charges,0.2540924
+cat__Online Security_No,0.214866
+cat__Internet Service_Fiber optic,0.19149187
+cat__Tech Support_No,0.16757326
+cat__Payment Method_Electronic check,0.15965305
+cat__Contract_Two year,0.124495976
+cat__Paperless Billing_No,0.12194401
+num__Total Charges,0.12156351
+cat__Multiple Lines_No,0.10697486
+cat__Partner_No,0.08168145
+cat__Online Backup_No,0.05869146
+cat__Streaming TV_Yes,0.05398936
+cat__Streaming Movies_Yes,0.053613484
+num__CLTV,0.051954374
+cat__Contract_One year,0.041556664
+cat__Phone Service_No,0.018139487
+cat__Gender_Female,0.012483954
+cat__Device Protection_No,0.008920586
+cat__Senior Citizen_No,0.007904101
+cat__Tech Support_Yes,0.005067696
+cat__Internet Service_No,0.0042139604
+cat__Streaming TV_No,0.0038893735
+cat__Payment Method_Credit card (automatic),0.0030195434
+cat__Internet Service_DSL,0.002963069
+cat__Payment Method_Mailed check,0.0026926866
+cat__Device Protection_Yes,0.0023256664
+cat__Payment Method_Bank transfer (automatic),0.0020298345
+cat__Online Backup_Yes,0.0020161192
+cat__Online Security_Yes,0.0012795958
+cat__Multiple Lines_Yes,0.0010168173
+cat__Streaming Movies_No,0.00059515494
+cat__Phone Service_Yes,0.0
+cat__Gender_Male,0.0
+cat__Dependents_Yes,0.0
+cat__Senior Citizen_Yes,0.0
+cat__Partner_Yes,0.0
+cat__Tech Support_No internet service,0.0
+cat__Device Protection_No internet service,0.0
+cat__Online Backup_No internet service,0.0
+cat__Online Security_No internet service,0.0
+cat__Multiple Lines_No phone service,0.0
+cat__Streaming TV_No internet service,0.0
+cat__Streaming Movies_No internet service,0.0
+cat__Paperless Billing_Yes,0.0
