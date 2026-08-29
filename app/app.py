@@ -12,8 +12,12 @@ import matplotlib.pyplot as plt
 # ---------------------------------------------------------------------------
 # CONFIG — matches 02_modeling.ipynb / 03_xai.ipynb save locations
 # ---------------------------------------------------------------------------
-MODEL_PATH = Path("../models/churn_model.pkl")
-CONFIG_PATH = Path("../models/model_config.json")
+# Resolved relative to this file, not the process's working directory —
+# `../models/...` broke on Streamlit Cloud, which runs the app with the
+# working directory set to the repo root rather than the app/ folder.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MODEL_PATH = REPO_ROOT / "models" / "churn_model.pkl"
+CONFIG_PATH = REPO_ROOT / "models" / "model_config.json"
 
 st.set_page_config(
     page_title="Customer Churn Predictor",

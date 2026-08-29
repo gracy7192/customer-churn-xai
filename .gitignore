@@ -31,6 +31,11 @@ data/*.xls
 models/*.pkl
 models/*.joblib
 
+# Exception: the final trained pipeline is committed so the Streamlit Cloud
+# deployment has a model to load without retraining on every cold start —
+# it's small (~350KB) and deterministic (see notebooks/03_xai.ipynb Section 1).
+!models/churn_model.pkl
+
 # Temporary files
 *.tmp
 *.log
