@@ -7,3 +7,4 @@ openpyxl
 jupyter
 xgboost
 shap
+streamlit
