@@ -67,6 +67,51 @@ NUMERIC_SLIDERS = {
 }
 
 # ---------------------------------------------------------------------------
+# Example customers — the same three (A/B/C) used throughout
+# notebooks/03_xai.ipynb Sections 10-11, real held-out customers with
+# verified predictions, not invented data. Lets a reviewer see a real
+# high-risk / low-risk / borderline case in one click instead of manually
+# filling in 16 fields.
+# ---------------------------------------------------------------------------
+EXAMPLE_CUSTOMERS = {
+    "Example A — High risk (5178-LMXOP, 93.5%)": {
+        "Gender": "Male", "Senior Citizen": "Yes", "Partner": "Yes", "Dependents": "No",
+        "Tenure Months": 1, "Phone Service": "Yes", "Multiple Lines": "Yes",
+        "Internet Service": "Fiber optic", "Online Security": "No", "Online Backup": "No",
+        "Device Protection": "No", "Tech Support": "No", "Streaming TV": "Yes",
+        "Streaming Movies": "Yes", "Contract": "Month-to-month", "Paperless Billing": "Yes",
+        "Payment Method": "Electronic check", "Monthly Charges": 95.1,
+        "Total Charges": 95.1, "CLTV": 5795,
+    },
+    "Example B — Low risk (0794-YVSGE, 0.2%)": {
+        "Gender": "Male", "Senior Citizen": "No", "Partner": "Yes", "Dependents": "Yes",
+        "Tenure Months": 72, "Phone Service": "Yes", "Multiple Lines": "No",
+        "Internet Service": "No", "Online Security": "No internet service",
+        "Online Backup": "No internet service", "Device Protection": "No internet service",
+        "Tech Support": "No internet service", "Streaming TV": "No internet service",
+        "Streaming Movies": "No internet service", "Contract": "Two year",
+        "Paperless Billing": "No", "Payment Method": "Bank transfer (automatic)",
+        "Monthly Charges": 20.3, "Total Charges": 1401.15, "CLTV": 5265,
+    },
+    "Example C — Borderline (9812-GHVRI, 30.0%)": {
+        "Gender": "Female", "Senior Citizen": "No", "Partner": "No", "Dependents": "No",
+        "Tenure Months": 40, "Phone Service": "Yes", "Multiple Lines": "Yes",
+        "Internet Service": "Fiber optic", "Online Security": "No", "Online Backup": "No",
+        "Device Protection": "No", "Tech Support": "No", "Streaming TV": "No",
+        "Streaming Movies": "Yes", "Contract": "Month-to-month", "Paperless Billing": "No",
+        "Payment Method": "Bank transfer (automatic)", "Monthly Charges": 83.85,
+        "Total Charges": 3532.25, "CLTV": 4294,
+    },
+}
+
+
+def _apply_example_customer():
+    label = st.session_state["example_picker"]
+    if label in EXAMPLE_CUSTOMERS:
+        for feature, value in EXAMPLE_CUSTOMERS[label].items():
+            st.session_state[f"field__{feature}"] = value
+
+# ---------------------------------------------------------------------------
 # 2. LOAD MODEL + CONFIG (Gracy's artifacts)
 # ---------------------------------------------------------------------------
 @st.cache_resource
@@ -314,40 +359,63 @@ def generate_recommendations(top_features: pd.DataFrame, top_n=5) -> list:
 st.title("📉 Customer Churn Prediction & Retention Dashboard")
 st.caption("Model: Gracy (XGBoost) · Explanations & recommendations: Gurnoor (SHAP) · App: Ujjwal")
 
+st.selectbox(
+    "Load a real example customer, or fill in the form manually below",
+    ["Custom (fill in manually)"] + list(EXAMPLE_CUSTOMERS.keys()),
+    key="example_picker",
+    on_change=_apply_example_customer,
+)
+
 with st.form("customer_form"):
     st.subheader("Customer Details")
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown("**Demographics**")
-        gender = st.selectbox("Gender", CATEGORICAL_OPTIONS["Gender"])
-        senior = st.selectbox("Senior Citizen", CATEGORICAL_OPTIONS["Senior Citizen"])
-        partner = st.selectbox("Partner", CATEGORICAL_OPTIONS["Partner"])
-        dependents = st.selectbox("Dependents", CATEGORICAL_OPTIONS["Dependents"])
-        tenure = st.slider("Tenure (Months)", *NUMERIC_SLIDERS["Tenure Months"])
+        gender = st.selectbox("Gender", CATEGORICAL_OPTIONS["Gender"], key="field__Gender")
+        senior = st.selectbox("Senior Citizen", CATEGORICAL_OPTIONS["Senior Citizen"], key="field__Senior Citizen")
+        partner = st.selectbox("Partner", CATEGORICAL_OPTIONS["Partner"], key="field__Partner")
+        dependents = st.selectbox("Dependents", CATEGORICAL_OPTIONS["Dependents"], key="field__Dependents")
+        st.session_state.setdefault("field__Tenure Months", NUMERIC_SLIDERS["Tenure Months"][2])
+        tenure = st.slider(
+            "Tenure (Months)", NUMERIC_SLIDERS["Tenure Months"][0], NUMERIC_SLIDERS["Tenure Months"][1],
+            key="field__Tenure Months",
+        )
 
     with col2:
         st.markdown("**Services**")
-        phone = st.selectbox("Phone Service", CATEGORICAL_OPTIONS["Phone Service"])
-        multiple_lines = st.selectbox("Multiple Lines", CATEGORICAL_OPTIONS["Multiple Lines"])
-        internet = st.selectbox("Internet Service", CATEGORICAL_OPTIONS["Internet Service"])
-        online_security = st.selectbox("Online Security", CATEGORICAL_OPTIONS["Online Security"])
-        online_backup = st.selectbox("Online Backup", CATEGORICAL_OPTIONS["Online Backup"])
-        device_protection = st.selectbox("Device Protection", CATEGORICAL_OPTIONS["Device Protection"])
-        tech_support = st.selectbox("Tech Support", CATEGORICAL_OPTIONS["Tech Support"])
-        streaming_tv = st.selectbox("Streaming TV", CATEGORICAL_OPTIONS["Streaming TV"])
-        streaming_movies = st.selectbox("Streaming Movies", CATEGORICAL_OPTIONS["Streaming Movies"])
+        phone = st.selectbox("Phone Service", CATEGORICAL_OPTIONS["Phone Service"], key="field__Phone Service")
+        multiple_lines = st.selectbox("Multiple Lines", CATEGORICAL_OPTIONS["Multiple Lines"], key="field__Multiple Lines")
+        internet = st.selectbox("Internet Service", CATEGORICAL_OPTIONS["Internet Service"], key="field__Internet Service")
+        online_security = st.selectbox("Online Security", CATEGORICAL_OPTIONS["Online Security"], key="field__Online Security")
+        online_backup = st.selectbox("Online Backup", CATEGORICAL_OPTIONS["Online Backup"], key="field__Online Backup")
+        device_protection = st.selectbox("Device Protection", CATEGORICAL_OPTIONS["Device Protection"], key="field__Device Protection")
+        tech_support = st.selectbox("Tech Support", CATEGORICAL_OPTIONS["Tech Support"], key="field__Tech Support")
+        streaming_tv = st.selectbox("Streaming TV", CATEGORICAL_OPTIONS["Streaming TV"], key="field__Streaming TV")
+        streaming_movies = st.selectbox("Streaming Movies", CATEGORICAL_OPTIONS["Streaming Movies"], key="field__Streaming Movies")
 
     with col3:
         st.markdown("**Account & Billing**")
-        contract = st.selectbox("Contract", CATEGORICAL_OPTIONS["Contract"])
-        paperless = st.selectbox("Paperless Billing", CATEGORICAL_OPTIONS["Paperless Billing"])
-        payment_method = st.selectbox("Payment Method", CATEGORICAL_OPTIONS["Payment Method"])
-        monthly_charges = st.slider("Monthly Charges ($)", *NUMERIC_SLIDERS["Monthly Charges"])
-        total_charges = st.slider("Total Charges ($)", *NUMERIC_SLIDERS["Total Charges"])
-        cltv = st.slider("CLTV", *NUMERIC_SLIDERS["CLTV"])
+        contract = st.selectbox("Contract", CATEGORICAL_OPTIONS["Contract"], key="field__Contract")
+        paperless = st.selectbox("Paperless Billing", CATEGORICAL_OPTIONS["Paperless Billing"], key="field__Paperless Billing")
+        payment_method = st.selectbox("Payment Method", CATEGORICAL_OPTIONS["Payment Method"], key="field__Payment Method")
+        st.session_state.setdefault("field__Monthly Charges", NUMERIC_SLIDERS["Monthly Charges"][2])
+        monthly_charges = st.slider(
+            "Monthly Charges ($)", NUMERIC_SLIDERS["Monthly Charges"][0], NUMERIC_SLIDERS["Monthly Charges"][1],
+            key="field__Monthly Charges",
+        )
+        st.session_state.setdefault("field__Total Charges", NUMERIC_SLIDERS["Total Charges"][2])
+        total_charges = st.slider(
+            "Total Charges ($)", NUMERIC_SLIDERS["Total Charges"][0], NUMERIC_SLIDERS["Total Charges"][1],
+            key="field__Total Charges",
+        )
+        st.session_state.setdefault("field__CLTV", NUMERIC_SLIDERS["CLTV"][2])
+        cltv = st.slider(
+            "CLTV", NUMERIC_SLIDERS["CLTV"][0], NUMERIC_SLIDERS["CLTV"][1],
+            key="field__CLTV",
+        )
 
-    submitted = st.form_submit_button("Predict Churn Risk", use_container_width=True)
+    submitted = st.form_submit_button("Predict Churn Risk", width="stretch")
 
 # ---------------------------------------------------------------------------
 # 9. RUN PREDICTION -> SHAP -> EXPLANATIONS -> RECOMMENDATIONS -> DISPLAY
@@ -369,47 +437,88 @@ if submitted:
         prediction = predict_customer(customer)
         prob = prediction["churn_probability"]
         is_risk = prediction["churn_prediction"]
+        risk_color = "#e6533c" if is_risk else "#3cb371"
+        risk_label = "High churn risk" if is_risk else "Not classified as churn-risk"
 
         st.divider()
         st.subheader("Prediction Results")
-        m1, m2 = st.columns(2)
-        m1.metric("Churn Probability", f"{prob:.1%}")
-        m2.metric(
-            f"Decision (threshold {CHURN_THRESHOLD:.2f})",
-            "🔴 High churn risk" if is_risk else "🟢 Not classified as churn-risk",
-        )
+        with st.container(border=True):
+            r1, r2 = st.columns([1, 2])
+            with r1:
+                st.markdown(
+                    f"""
+                    <div style="text-align:center;">
+                      <div style="font-size:2.6rem; font-weight:700; color:{risk_color};">
+                        {prob:.1%}
+                      </div>
+                      <div style="color:#9aa0a6; font-size:0.9rem;">predicted churn probability</div>
+                      <div style="margin-top:0.6rem; display:inline-block; padding:0.25rem 0.9rem;
+                                  border-radius:999px; background:{risk_color}22; color:{risk_color};
+                                  font-weight:600; border:1px solid {risk_color}66;">
+                        {'🔴' if is_risk else '🟢'} {risk_label}
+                      </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            with r2:
+                st.caption(f"Decision threshold: {CHURN_THRESHOLD:.2f} (project-selected, not the default 0.50)")
+                st.progress(min(max(prob, 0.0), 1.0))
+                st.caption(
+                    "Probability is the model's raw output; the threshold is a separate, "
+                    "fixed business decision on top of it — not something this app changes."
+                )
 
         top_features = get_top_shap_features_for_customer(customer, top_n=None)
         increasing = top_features[top_features["shap_value"] > 0].head(5)
         decreasing = top_features[top_features["shap_value"] < 0].sort_values("shap_value").head(5)
 
         st.subheader("Why this prediction? (SHAP explanation)")
-        top5 = top_features.reindex(top_features["shap_value"].abs().sort_values(ascending=False).index).head(5)
-        fig, ax = plt.subplots(figsize=(6, 3))
-        colors = ["#d9534f" if v > 0 else "#5cb85c" for v in top5["shap_value"][::-1]]
-        ax.barh(top5["feature"][::-1], top5["shap_value"][::-1], color=colors)
-        ax.set_xlabel("Impact on churn probability (SHAP value)")
-        ax.set_title("Top factors for this customer")
-        st.pyplot(fig)
-        st.caption("🔴 Red = pushes prediction toward churn · 🟢 Green = pushes toward staying")
+        with st.container(border=True):
+            top5 = top_features.reindex(top_features["shap_value"].abs().sort_values(ascending=False).index).head(5)
 
-        col_up, col_down = st.columns(2)
-        with col_up:
-            st.markdown("**Why risk is higher**")
-            for row in increasing.itertuples():
-                st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
-        with col_down:
-            st.markdown("**Why risk is lower**")
-            for row in decreasing.itertuples():
-                st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
+            with plt.style.context("dark_background"):
+                fig, ax = plt.subplots(figsize=(7, 3))
+                fig.patch.set_facecolor("#181c24")
+                ax.set_facecolor("#181c24")
+                colors = ["#e6533c" if v > 0 else "#3cb371" for v in top5["shap_value"][::-1]]
+                ax.barh(top5["feature"][::-1], top5["shap_value"][::-1], color=colors)
+                ax.set_xlabel("Impact on churn probability (SHAP value)", color="#e6e6e6")
+                ax.set_title("Top factors for this customer", color="#e6e6e6")
+                ax.tick_params(colors="#e6e6e6")
+                for spine in ax.spines.values():
+                    spine.set_color("#3a3f4b")
+                ax.axvline(0, color="#3a3f4b", linewidth=1)
+                fig.tight_layout()
+            st.pyplot(fig, width="stretch")
+            st.caption("🔴 Red = pushes prediction toward churn · 🟢 Green = pushes toward staying")
+
+            col_up, col_down = st.columns(2)
+            with col_up:
+                st.markdown("**Why risk is higher**")
+                if len(increasing) == 0:
+                    st.caption("No risk-increasing factors in the top drivers for this customer.")
+                for row in increasing.itertuples():
+                    st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
+            with col_down:
+                st.markdown("**Why risk is lower**")
+                if len(decreasing) == 0:
+                    st.caption("No risk-reducing factors in the top drivers for this customer.")
+                for row in decreasing.itertuples():
+                    st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
 
         st.subheader("Recommended Retention Actions")
-        recommendations = generate_recommendations(top_features, top_n=5)
-        if recommendations:
-            for rec in recommendations:
-                st.markdown(f"- **{rec['driver']}** (`{rec['customer_value']}`) → {rec['action']}")
-        else:
-            st.info("No actionable risk-increasing drivers identified for this customer.")
+        with st.container(border=True):
+            recommendations = generate_recommendations(top_features, top_n=5)
+            if recommendations:
+                st.caption(
+                    "Rule-based and traceable — each action maps directly to one of this "
+                    "customer's actionable, risk-increasing SHAP drivers, not something learned by the model."
+                )
+                for rec in recommendations:
+                    st.markdown(f"- **{rec['driver']}** (`{rec['customer_value']}`) → {rec['action']}")
+            else:
+                st.info("No actionable risk-increasing drivers identified for this customer.")
 
     except Exception as e:
         st.error(f"Something went wrong while generating the prediction: {e}")
