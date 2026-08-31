@@ -669,6 +669,57 @@ with tab_batch:
                     s2.metric("Flagged as churn-risk", f"{int(predictions.sum()):,} ({predictions.mean():.1%})")
                     s3.metric("Average churn probability", f"{probabilities.mean():.1%}")
 
+                    chart_col1, chart_col2 = st.columns(2)
+
+                    with chart_col1:
+                        st.markdown("**Churn probability distribution**")
+                        with plt.style.context("dark_background"):
+                            fig, ax = plt.subplots(figsize=(5.5, 3.5))
+                            fig.patch.set_facecolor("#181c24")
+                            ax.set_facecolor("#181c24")
+                            ax.hist(probabilities, bins=20, range=(0, 1), color="#e6533c", edgecolor="#181c24")
+                            ax.axvline(CHURN_THRESHOLD, color="#e6e6e6", linestyle="--", linewidth=1.2)
+                            ax.text(
+                                CHURN_THRESHOLD, ax.get_ylim()[1] * 0.95, f"  threshold {CHURN_THRESHOLD:.2f}",
+                                color="#e6e6e6", fontsize=8, va="top",
+                            )
+                            ax.set_xlabel("Predicted churn probability", color="#e6e6e6")
+                            ax.set_ylabel("Number of customers", color="#e6e6e6")
+                            ax.tick_params(colors="#e6e6e6")
+                            for spine in ax.spines.values():
+                                spine.set_color("#3a3f4b")
+                            fig.tight_layout()
+                        st.pyplot(fig, width="stretch")
+
+                    with chart_col2:
+                        st.markdown("**Top churn drivers across this batch**")
+                        mean_abs_shap = np.abs(aggregated).mean(axis=0)
+                        batch_importance = (
+                            pd.DataFrame({"feature": FEATURES, "mean_abs_shap": mean_abs_shap})
+                            .sort_values("mean_abs_shap", ascending=False)
+                            .head(10)
+                        )
+                        with plt.style.context("dark_background"):
+                            fig2, ax2 = plt.subplots(figsize=(5.5, 3.5))
+                            fig2.patch.set_facecolor("#181c24")
+                            ax2.set_facecolor("#181c24")
+                            ax2.barh(
+                                batch_importance["feature"][::-1],
+                                batch_importance["mean_abs_shap"][::-1],
+                                color="#4a90d9",
+                            )
+                            ax2.set_xlabel("Mean |SHAP value| across all customers", color="#e6e6e6")
+                            ax2.tick_params(colors="#e6e6e6")
+                            for spine in ax2.spines.values():
+                                spine.set_color("#3a3f4b")
+                            fig2.tight_layout()
+                        st.pyplot(fig2, width="stretch")
+                        st.caption(
+                            "Which features move predictions most across the whole uploaded "
+                            "dataset — not just direction, overall influence (same metric as "
+                            "results/shap_feature_importance.csv in the notebook, computed live on this data)."
+                        )
+
                     st.dataframe(
                         results_df.sort_values("Churn Probability", ascending=False),
                         width="stretch",
