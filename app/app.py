@@ -7,7 +7,22 @@ import numpy as np
 import pandas as pd
 import shap
 import streamlit as st
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+
+# ---------------------------------------------------------------------------
+# DESIGN SYSTEM — color tokens shared by every chart/card below. Brand accent
+# (PRIMARY) is kept separate from the risk semantic colors (RISK_HIGH/
+# RISK_LOW), which previously doubled as the app's only accent color.
+# ---------------------------------------------------------------------------
+PRIMARY = "#7C6FF0"
+RISK_HIGH = "#FF5C7A"
+RISK_LOW = "#2DD9A3"
+ACCENT_BLUE = "#5B8DEF"
+BG = "#0B0D14"
+SURFACE = "#141824"
+BORDER = "#262B3A"
+TEXT = "#E9EAF0"
+TEXT_MUTED = "#9aa0ac"
 
 # ---------------------------------------------------------------------------
 # CONFIG — matches 02_modeling.ipynb / 03_xai.ipynb save locations
@@ -23,6 +38,191 @@ st.set_page_config(
     page_title="Customer Churn Predictor",
     page_icon="📉",
     layout="wide",
+)
+
+st.markdown(
+    f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    html, body, [class*="css"], [class*="st-"] {{
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }}
+
+    .block-container {{
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+        max-width: 1200px;
+    }}
+
+    /* Native bordered containers (st.container(border=True)) get a softer,
+       slightly elevated card look than Streamlit's flat default border. */
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        background: linear-gradient(180deg, {SURFACE} 0%, {BG} 100%);
+        border: 1px solid {BORDER} !important;
+        border-radius: 14px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }}
+
+    /* Tabs */
+    button[data-baseweb="tab"] {{
+        font-weight: 600;
+        font-size: 0.95rem;
+    }}
+    div[data-baseweb="tab-highlight"] {{
+        background-color: {PRIMARY} !important;
+    }}
+
+    /* Hero header — icon is absolutely positioned (not a flex item) because
+       Chromium renders text inside a flex item at a fractional sub-pixel
+       offset at this font-size/weight, producing a doubled/ghosted glyph
+       edge; plain block layout for the title avoids it entirely. */
+    .hero {{
+        position: relative;
+        min-height: 56px;
+        padding-left: 72px;
+        margin-bottom: 1rem;
+    }}
+    .hero-icon {{
+        position: absolute;
+        left: 0; top: 0;
+        width: 56px; height: 56px;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, {PRIMARY} 0%, #5847D6 100%);
+        box-shadow: 0 4px 14px rgba(124,111,240,0.35);
+    }}
+    .hero-title {{
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        font-size: 2.1rem;
+        font-weight: 700;
+        color: {TEXT};
+        line-height: 1.25;
+        letter-spacing: -0.01em;
+    }}
+    .hero-subtitle {{
+        font-size: 0.95rem;
+        color: {TEXT_MUTED};
+        margin-top: 0.15rem;
+    }}
+
+    /* Stat pill strip */
+    .stat-strip {{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin: 0.75rem 0 1.4rem 0;
+    }}
+    .stat-pill {{
+        background: {SURFACE};
+        border: 1px solid {BORDER};
+        border-radius: 10px;
+        padding: 0.5rem 0.9rem;
+        min-width: 120px;
+    }}
+    .stat-value {{
+        display: block;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: {TEXT};
+    }}
+    .stat-label {{
+        display: block;
+        font-size: 0.72rem;
+        color: {TEXT_MUTED};
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-top: 0.1rem;
+    }}
+    .credit-line {{
+        font-size: 0.82rem;
+        color: {TEXT_MUTED};
+        margin-bottom: 1.5rem;
+    }}
+
+    /* Section titles */
+    .section-title {{
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: {TEXT};
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.2rem 0 0.9rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid {BORDER};
+    }}
+    .col-title {{
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: {PRIMARY};
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.6rem;
+    }}
+
+    /* Risk badge */
+    .risk-badge {{
+        display: inline-block;
+        margin-top: 0.6rem;
+        padding: 0.3rem 1rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }}
+
+    /* Explanation chips */
+    .exp-chip {{
+        padding: 0.55rem 0.8rem;
+        border-radius: 8px;
+        margin-bottom: 0.45rem;
+        font-size: 0.87rem;
+        line-height: 1.35;
+        color: {TEXT};
+    }}
+    .exp-chip-up {{
+        background: rgba(255,92,122,0.10);
+        border-left: 3px solid {RISK_HIGH};
+    }}
+    .exp-chip-down {{
+        background: rgba(45,217,163,0.10);
+        border-left: 3px solid {RISK_LOW};
+    }}
+
+    /* Recommendation cards */
+    .rec-card {{
+        background: {SURFACE};
+        border: 1px solid {BORDER};
+        border-left: 3px solid {PRIMARY};
+        border-radius: 8px;
+        padding: 0.7rem 0.9rem;
+        margin-bottom: 0.55rem;
+    }}
+    .rec-driver {{
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: {TEXT};
+    }}
+    .rec-value {{
+        font-weight: 400;
+        color: {TEXT_MUTED};
+        font-size: 0.8rem;
+        background: {BG};
+        padding: 0.05rem 0.4rem;
+        border-radius: 4px;
+        margin-left: 0.3rem;
+    }}
+    .rec-action {{
+        font-size: 0.86rem;
+        color: {TEXT_MUTED};
+        margin-top: 0.25rem;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------------------------
@@ -356,8 +556,25 @@ def generate_recommendations(top_features: pd.DataFrame, top_n=5) -> list:
 # ---------------------------------------------------------------------------
 # 8. UI — INPUT FORM
 # ---------------------------------------------------------------------------
-st.title("📉 Customer Churn Prediction & Retention Dashboard")
-st.caption("Model: Gracy (XGBoost) · Explanations & recommendations: Gurnoor (SHAP) · App: Ujjwal")
+st.markdown(
+    f"""
+    <div class="hero">
+      <div class="hero-icon">📉</div>
+      <div>
+        <div class="hero-title">Customer Churn Prediction &amp; Retention</div>
+        <div class="hero-subtitle">Predict churn risk, explain it with SHAP, and get a traceable retention action — per customer or across a whole dataset.</div>
+      </div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat-pill"><span class="stat-value">85.5%</span><span class="stat-label">Model ROC-AUC</span></div>
+      <div class="stat-pill"><span class="stat-value">{CHURN_THRESHOLD:.2f}</span><span class="stat-label">Decision threshold</span></div>
+      <div class="stat-pill"><span class="stat-value">7,043</span><span class="stat-label">Training customers</span></div>
+      <div class="stat-pill"><span class="stat-value">20</span><span class="stat-label">Input features</span></div>
+    </div>
+    <div class="credit-line">Model: Gracy (XGBoost) · Explanations &amp; recommendations: Gurnoor (SHAP) · App: Ujjwal</div>
+    """,
+    unsafe_allow_html=True,
+)
 
 tab_single, tab_batch = st.tabs(["🧍 Single Customer", "📁 Batch Upload"])
 
@@ -370,11 +587,11 @@ with tab_single:
     )
 
     with st.form("customer_form"):
-        st.subheader("Customer Details")
+        st.markdown('<div class="section-title">🧾 Customer Details</div>', unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown("**Demographics**")
+            st.markdown('<div class="col-title">👤 Demographics</div>', unsafe_allow_html=True)
             gender = st.selectbox("Gender", CATEGORICAL_OPTIONS["Gender"], key="field__Gender")
             senior = st.selectbox("Senior Citizen", CATEGORICAL_OPTIONS["Senior Citizen"], key="field__Senior Citizen")
             partner = st.selectbox("Partner", CATEGORICAL_OPTIONS["Partner"], key="field__Partner")
@@ -386,7 +603,7 @@ with tab_single:
             )
 
         with col2:
-            st.markdown("**Services**")
+            st.markdown('<div class="col-title">🛠️ Services</div>', unsafe_allow_html=True)
             phone = st.selectbox("Phone Service", CATEGORICAL_OPTIONS["Phone Service"], key="field__Phone Service")
             multiple_lines = st.selectbox("Multiple Lines", CATEGORICAL_OPTIONS["Multiple Lines"], key="field__Multiple Lines")
             internet = st.selectbox("Internet Service", CATEGORICAL_OPTIONS["Internet Service"], key="field__Internet Service")
@@ -398,7 +615,7 @@ with tab_single:
             streaming_movies = st.selectbox("Streaming Movies", CATEGORICAL_OPTIONS["Streaming Movies"], key="field__Streaming Movies")
 
         with col3:
-            st.markdown("**Account & Billing**")
+            st.markdown('<div class="col-title">💳 Account & Billing</div>', unsafe_allow_html=True)
             contract = st.selectbox("Contract", CATEGORICAL_OPTIONS["Contract"], key="field__Contract")
             paperless = st.selectbox("Paperless Billing", CATEGORICAL_OPTIONS["Paperless Billing"], key="field__Paperless Billing")
             payment_method = st.selectbox("Payment Method", CATEGORICAL_OPTIONS["Payment Method"], key="field__Payment Method")
@@ -440,24 +657,45 @@ with tab_single:
             prediction = predict_customer(customer)
             prob = prediction["churn_probability"]
             is_risk = prediction["churn_prediction"]
-            risk_color = "#e6533c" if is_risk else "#3cb371"
+            risk_color = RISK_HIGH if is_risk else RISK_LOW
             risk_label = "High churn risk" if is_risk else "Not classified as churn-risk"
 
             st.divider()
-            st.subheader("Prediction Results")
+            st.markdown('<div class="section-title">📊 Prediction Results</div>', unsafe_allow_html=True)
             with st.container(border=True):
-                r1, r2 = st.columns([1, 2])
+                r1, r2 = st.columns([1, 1.4])
                 with r1:
+                    gauge = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=prob * 100,
+                        number={"suffix": "%", "font": {"size": 38, "color": risk_color}},
+                        gauge={
+                            "axis": {"range": [0, 100], "tickcolor": TEXT_MUTED, "tickfont": {"color": TEXT_MUTED, "size": 10}},
+                            "bar": {"color": risk_color, "thickness": 0.28},
+                            "bgcolor": "rgba(0,0,0,0)",
+                            "borderwidth": 0,
+                            "threshold": {
+                                "line": {"color": TEXT, "width": 3},
+                                "thickness": 0.85,
+                                "value": CHURN_THRESHOLD * 100,
+                            },
+                            "steps": [
+                                {"range": [0, CHURN_THRESHOLD * 100], "color": "rgba(45,217,163,0.12)"},
+                                {"range": [CHURN_THRESHOLD * 100, 100], "color": "rgba(255,92,122,0.12)"},
+                            ],
+                        },
+                    ))
+                    gauge.update_layout(
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        font={"color": TEXT},
+                        height=200,
+                        margin=dict(l=20, r=20, t=20, b=10),
+                    )
+                    st.plotly_chart(gauge, width="stretch", config={"displayModeBar": False})
                     st.markdown(
                         f"""
                         <div style="text-align:center;">
-                          <div style="font-size:2.6rem; font-weight:700; color:{risk_color};">
-                            {prob:.1%}
-                          </div>
-                          <div style="color:#9aa0a6; font-size:0.9rem;">predicted churn probability</div>
-                          <div style="margin-top:0.6rem; display:inline-block; padding:0.25rem 0.9rem;
-                                      border-radius:999px; background:{risk_color}22; color:{risk_color};
-                                      font-weight:600; border:1px solid {risk_color}66;">
+                          <div class="risk-badge" style="background:{risk_color}22; color:{risk_color}; border:1px solid {risk_color}66;">
                             {'🔴' if is_risk else '🟢'} {risk_label}
                           </div>
                         </div>
@@ -466,34 +704,37 @@ with tab_single:
                     )
                 with r2:
                     st.caption(f"Decision threshold: {CHURN_THRESHOLD:.2f} (project-selected, not the default 0.50)")
-                    st.progress(min(max(prob, 0.0), 1.0))
                     st.caption(
                         "Probability is the model's raw output; the threshold is a separate, "
-                        "fixed business decision on top of it — not something this app changes."
+                        "fixed business decision on top of it — not something this app changes. "
+                        "The white marker on the gauge shows exactly where that threshold sits."
                     )
 
             top_features = get_top_shap_features_for_customer(customer, top_n=None)
             increasing = top_features[top_features["shap_value"] > 0].head(5)
             decreasing = top_features[top_features["shap_value"] < 0].sort_values("shap_value").head(5)
 
-            st.subheader("Why this prediction? (SHAP explanation)")
+            st.markdown('<div class="section-title">🔍 Why this prediction? (SHAP explanation)</div>', unsafe_allow_html=True)
             with st.container(border=True):
                 top5 = top_features.reindex(top_features["shap_value"].abs().sort_values(ascending=False).index).head(5)
 
-                with plt.style.context("dark_background"):
-                    fig, ax = plt.subplots(figsize=(7, 3))
-                    fig.patch.set_facecolor("#181c24")
-                    ax.set_facecolor("#181c24")
-                    colors = ["#e6533c" if v > 0 else "#3cb371" for v in top5["shap_value"][::-1]]
-                    ax.barh(top5["feature"][::-1], top5["shap_value"][::-1], color=colors)
-                    ax.set_xlabel("Impact on churn probability (SHAP value)", color="#e6e6e6")
-                    ax.set_title("Top factors for this customer", color="#e6e6e6")
-                    ax.tick_params(colors="#e6e6e6")
-                    for spine in ax.spines.values():
-                        spine.set_color("#3a3f4b")
-                    ax.axvline(0, color="#3a3f4b", linewidth=1)
-                    fig.tight_layout()
-                st.pyplot(fig, width="stretch")
+                shap_fig = go.Figure(go.Bar(
+                    x=top5["shap_value"][::-1],
+                    y=top5["feature"][::-1],
+                    orientation="h",
+                    marker_color=[RISK_HIGH if v > 0 else RISK_LOW for v in top5["shap_value"][::-1]],
+                    hovertemplate="<b>%{y}</b><br>SHAP value: %{x:.3f}<extra></extra>",
+                ))
+                shap_fig.update_layout(
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font={"color": TEXT},
+                    height=300,
+                    margin=dict(l=10, r=20, t=10, b=40),
+                    xaxis=dict(title="Impact on churn probability (SHAP value)", gridcolor=BORDER, zerolinecolor=TEXT_MUTED),
+                    yaxis=dict(gridcolor=BORDER),
+                )
+                st.plotly_chart(shap_fig, width="stretch", config={"displayModeBar": False})
                 st.caption("🔴 Red = pushes prediction toward churn · 🟢 Green = pushes toward staying")
 
                 col_up, col_down = st.columns(2)
@@ -502,15 +743,17 @@ with tab_single:
                     if len(increasing) == 0:
                         st.caption("No risk-increasing factors in the top drivers for this customer.")
                     for row in increasing.itertuples():
-                        st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
+                        text = generate_business_explanation(row.feature, row.customer_value, row.shap_value)
+                        st.markdown(f'<div class="exp-chip exp-chip-up">▲ {text}</div>', unsafe_allow_html=True)
                 with col_down:
                     st.markdown("**Why risk is lower**")
                     if len(decreasing) == 0:
                         st.caption("No risk-reducing factors in the top drivers for this customer.")
                     for row in decreasing.itertuples():
-                        st.write("• " + generate_business_explanation(row.feature, row.customer_value, row.shap_value))
+                        text = generate_business_explanation(row.feature, row.customer_value, row.shap_value)
+                        st.markdown(f'<div class="exp-chip exp-chip-down">▼ {text}</div>', unsafe_allow_html=True)
 
-            st.subheader("Recommended Retention Actions")
+            st.markdown('<div class="section-title">🎯 Recommended Retention Actions</div>', unsafe_allow_html=True)
             with st.container(border=True):
                 recommendations = generate_recommendations(top_features, top_n=5)
                 if recommendations:
@@ -519,7 +762,15 @@ with tab_single:
                         "customer's actionable, risk-increasing SHAP drivers, not something learned by the model."
                     )
                     for rec in recommendations:
-                        st.markdown(f"- **{rec['driver']}** (`{rec['customer_value']}`) → {rec['action']}")
+                        st.markdown(
+                            f"""
+                            <div class="rec-card">
+                              <div class="rec-driver">{rec['driver']}<span class="rec-value">{rec['customer_value']}</span></div>
+                              <div class="rec-action">→ {rec['action']}</div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
                 else:
                     st.info("No actionable risk-increasing drivers identified for this customer.")
 
@@ -556,7 +807,7 @@ def _find_id_column(df: pd.DataFrame) -> str | None:
 
 
 with tab_batch:
-    st.subheader("Upload a dataset")
+    st.markdown('<div class="section-title">📁 Upload a Dataset</div>', unsafe_allow_html=True)
     st.caption(
         "Upload a CSV or Excel file with one row per customer. It can be the raw "
         "Telco dataset (extra columns like CustomerID, Country, Churn Label are fine "
@@ -662,34 +913,43 @@ with tab_batch:
                         )
 
                     st.divider()
-                    st.subheader("Batch Results")
+                    st.markdown('<div class="section-title">📊 Batch Results</div>', unsafe_allow_html=True)
 
-                    s1, s2, s3 = st.columns(3)
-                    s1.metric("Customers analyzed", f"{len(results_df):,}")
-                    s2.metric("Flagged as churn-risk", f"{int(predictions.sum()):,} ({predictions.mean():.1%})")
-                    s3.metric("Average churn probability", f"{probabilities.mean():.1%}")
+                    st.markdown(
+                        f"""
+                        <div class="stat-strip">
+                          <div class="stat-pill"><span class="stat-value">{len(results_df):,}</span><span class="stat-label">Customers analyzed</span></div>
+                          <div class="stat-pill"><span class="stat-value" style="color:{RISK_HIGH};">{int(predictions.sum()):,} ({predictions.mean():.1%})</span><span class="stat-label">Flagged as churn-risk</span></div>
+                          <div class="stat-pill"><span class="stat-value">{probabilities.mean():.1%}</span><span class="stat-label">Average probability</span></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
                     chart_col1, chart_col2 = st.columns(2)
 
                     with chart_col1:
                         st.markdown("**Churn probability distribution**")
-                        with plt.style.context("dark_background"):
-                            fig, ax = plt.subplots(figsize=(5.5, 3.5))
-                            fig.patch.set_facecolor("#181c24")
-                            ax.set_facecolor("#181c24")
-                            ax.hist(probabilities, bins=20, range=(0, 1), color="#e6533c", edgecolor="#181c24")
-                            ax.axvline(CHURN_THRESHOLD, color="#e6e6e6", linestyle="--", linewidth=1.2)
-                            ax.text(
-                                CHURN_THRESHOLD, ax.get_ylim()[1] * 0.95, f"  threshold {CHURN_THRESHOLD:.2f}",
-                                color="#e6e6e6", fontsize=8, va="top",
-                            )
-                            ax.set_xlabel("Predicted churn probability", color="#e6e6e6")
-                            ax.set_ylabel("Number of customers", color="#e6e6e6")
-                            ax.tick_params(colors="#e6e6e6")
-                            for spine in ax.spines.values():
-                                spine.set_color("#3a3f4b")
-                            fig.tight_layout()
-                        st.pyplot(fig, width="stretch")
+                        hist_fig = go.Figure(go.Histogram(
+                            x=probabilities, nbinsx=20, marker_color=PRIMARY,
+                            hovertemplate="Probability: %{x:.0%}<br>Customers: %{y}<extra></extra>",
+                        ))
+                        hist_fig.add_vline(
+                            x=CHURN_THRESHOLD, line_dash="dash", line_color=TEXT,
+                            annotation_text=f"threshold {CHURN_THRESHOLD:.2f}",
+                            annotation_font_color=TEXT_MUTED,
+                        )
+                        hist_fig.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font={"color": TEXT},
+                            height=320,
+                            margin=dict(l=10, r=10, t=20, b=40),
+                            xaxis=dict(title="Predicted churn probability", gridcolor=BORDER, tickformat=".0%"),
+                            yaxis=dict(title="Number of customers", gridcolor=BORDER),
+                            bargap=0.05,
+                        )
+                        st.plotly_chart(hist_fig, width="stretch", config={"displayModeBar": False})
 
                     with chart_col2:
                         st.markdown("**Top churn drivers across this batch**")
@@ -699,21 +959,23 @@ with tab_batch:
                             .sort_values("mean_abs_shap", ascending=False)
                             .head(10)
                         )
-                        with plt.style.context("dark_background"):
-                            fig2, ax2 = plt.subplots(figsize=(5.5, 3.5))
-                            fig2.patch.set_facecolor("#181c24")
-                            ax2.set_facecolor("#181c24")
-                            ax2.barh(
-                                batch_importance["feature"][::-1],
-                                batch_importance["mean_abs_shap"][::-1],
-                                color="#4a90d9",
-                            )
-                            ax2.set_xlabel("Mean |SHAP value| across all customers", color="#e6e6e6")
-                            ax2.tick_params(colors="#e6e6e6")
-                            for spine in ax2.spines.values():
-                                spine.set_color("#3a3f4b")
-                            fig2.tight_layout()
-                        st.pyplot(fig2, width="stretch")
+                        importance_fig = go.Figure(go.Bar(
+                            x=batch_importance["mean_abs_shap"][::-1],
+                            y=batch_importance["feature"][::-1],
+                            orientation="h",
+                            marker_color=ACCENT_BLUE,
+                            hovertemplate="<b>%{y}</b><br>Mean |SHAP|: %{x:.3f}<extra></extra>",
+                        ))
+                        importance_fig.update_layout(
+                            paper_bgcolor="rgba(0,0,0,0)",
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            font={"color": TEXT},
+                            height=320,
+                            margin=dict(l=10, r=20, t=20, b=40),
+                            xaxis=dict(title="Mean |SHAP value| across all customers", gridcolor=BORDER),
+                            yaxis=dict(gridcolor=BORDER),
+                        )
+                        st.plotly_chart(importance_fig, width="stretch", config={"displayModeBar": False})
                         st.caption(
                             "Which features move predictions most across the whole uploaded "
                             "dataset — not just direction, overall influence (same metric as "
